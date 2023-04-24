@@ -1,0 +1,131 @@
+
+#include <Servo.h>
+
+// setting variables for Servos
+Servo boulder;
+Servo teeth;
+Servo head;
+Servo cyclops;
+
+// setting varaibles for buttons 
+const int buttonCave = 13;
+const int buttonGuy = 10;
+const int buttonSpear = 12;
+const int buttonOdy = 11;
+
+// setting varaibles for LEDs
+const int LED1 = 4;
+const int LED2 = 5;
+const int LED3 = 3;
+
+//starting postitions for each button Val
+int buttonVal = 0;
+int buttonValA = 0;
+int buttonValB = 0;
+int buttonValC = 0;
+int pos = 0;
+
+
+// booleans used to keep track or order of operations as well as the teeth on the cyclops chomping up and down
+bool teethChomping = false;
+bool reset = false;
+bool A = false;
+bool B = false;
+bool interactionA = false;
+bool interactionB = false;
+
+
+// setting the buttons, LEDs, and Servos to pins 
+void setup() {
+  pinMode(buttonCave, INPUT);
+  pinMode(buttonGuy, INPUT);
+  pinMode(buttonSpear, INPUT);
+  pinMode(buttonOdy, INPUT);
+  pinMode(LED1, OUTPUT);
+  pinMode(LED2, OUTPUT);
+  pinMode(LED3, OUTPUT);
+
+  boulder.attach(7);
+  teeth.attach(9);
+  head.attach(2);
+  cyclops.attach(6);
+
+  // starting positions, making each servo go back to 0 at the beggening of each run so the servos dont break! :)
+  // put in a reset boolean so the build does not reset half way through the interaction
+  reset = true;
+  head.write(10);
+  boulder.write(0);
+  teeth.write(0);
+  cyclops.write(0);
+  digitalWrite(LED1, HIGH);
+}
+
+void loop() {
+  reset = false;
+
+  // 1st interaction: When Odysseus is places on the button inside the cave
+  buttonVal = digitalRead(buttonCave);
+
+  if (buttonVal == HIGH) {
+    interactionA = true;
+    boulder.write(180); // the boulder will block off the enerance to the cave and the LED highlighting the entrance to the cave will turn off
+    digitalWrite(LED1, LOW);
+    teethChomping = true; // teeth on the cyclops start moving up and down 
+  }
+
+  if (teethChomping) {
+    for (pos = 0; pos <= 180; pos += 1) { // for loop code that allows for teeth to keep moving untill the second button is pressed
+      teeth.write(pos);
+      delay(2);
+    }
+
+    for (pos = 180; pos >= 0; pos -= 1) {
+      teeth.write(pos);
+      delay(2);
+    }
+  }
+
+// second interaction 
+  if (interactionA == true) {
+    buttonValA = digitalRead(buttonGuy);
+
+    if (buttonValA == HIGH) { // if button is pressed the cyclops head will spin revealing a new expression
+      interactionB = true;
+      teethChomping = false;
+      head.write(90);
+      digitalWrite(LED3, HIGH); // LEDs also light up with a slight delay revealing text 
+      delay(5000);
+      digitalWrite(LED3, LOW);
+      delay(2000);
+      digitalWrite(LED2, HIGH);
+      delay(3000);
+      digitalWrite(LED2, LOW);
+    }
+
+    if (buttonValA == LOW) {
+    }
+  }
+
+// third interaction
+  if (interactionB == true) {
+    buttonValB = digitalRead(buttonSpear); // both the spear and odysseus must activate the buttons inorder for this interactions to work
+    buttonValC = digitalRead(buttonOdy);
+
+    if (buttonValB == HIGH) {
+      A = true;
+    }
+
+    if (buttonValC == HIGH) {
+      B = true;
+    }
+
+    if (B == true) {
+      head.write(180); // head will spin again revealing the final expression
+      boulder.write(0); // the boulder will move again revelaing the exit to the cave 
+      cyclops.write(90); // a second cyclops will pop up from the side ready to attack!
+      digitalWrite(LED1, HIGH); // LED will turn back on highlighting the exit from the cave 
+    }
+  }
+  reset = true; // reset boolean gets turned back to true, once the interaction is over and the code in reuploaded the servos will reset back to their original postions
+}
+
